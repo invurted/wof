@@ -1,0 +1,12 @@
+<?php
+$host="localhost";
+$user="root";
+$password="grommit99";
+
+$cxn = mysqli_connect($host,$user,$password);
+$sql="SHOW DATABASES";
+$result = mysqli_query($cxn,$sql);
+if ($result == false)
+{ echo "Error: " . mysqli_error($cxn); }
+else{
+ if(mysqli_num_rows($result)  1 }

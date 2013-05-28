@@ -1,0 +1,84 @@
+<?php //userRegister.php 
+// Check if the form was submitted 
+if( count($_POST) > 0 ) { 
+// check that all fields are filled in 
+if( empty($_POST['username']) ) { 
+    $errors[] = 'You must supply a username.'; 
+} 
+if( empty($_POST['email']) ) { 
+    $errors[] = 'You must supply an email.'; 
+} 
+if( empty($_POST['pass1']) ) { 
+    $errors[] = 'You must supply a password.'; 
+} 
+if( empty($_POST['pass2']) ) { 
+    $errors[] = 'You must confirm your password.'; 
+} 
+// check the validity of the entered data 
+// If there are not already errors from missing fields 
+if( count($errors) == 0 ) { 
+    // check the validity of the entered data 
+    // Check the username 
+    if( !preg_match('/^[a-z][a-z0-9]+$/i',$_POST['username']) ) { 
+        $errors[] = 'Your username must begin with a letter, and only contain letters and numbers.'; 
+    } 
+    // Check the email 
+    if( !filter_var($_POST['email'],FILTER_VALIDATE_EMAIL) ) { 
+        $errors[] = 'You must supply a valid email.'; 
+    } 
+    // Check the passwords 
+    if( $_POST['pass1'] != $_POST['pass2'] ) { 
+        $errors[] = 'You must supply matching passwords.'; 
+    } 
+
+// add user to the database 
+if( count($errors) == 0 ) { 
+    // connect to mysql 
+    include 'lung.php'; 
+    $conn = mysqli_connect(DBHOST,DBUSER,DBPASS,DBNAME); 
+     
+    // Check if the connection failed 
+    if( !$conn ) { 
+        //connection failed 
+        die('Failed to connect '.mysqli_connect_error()); 
+    } 
+     
+    // prepare data for database 
+    $username = mysqli_real_escape_string($conn,$_POST['username']); 
+    $email = mysqli_real_escape_string($conn,$_POST['email']); 
+    $pass = hash('sha256',strtolower($_POST['username']).$_POST['pass1']); 
+} 
+
+// Create the insert query 
+$sql = sprintf("INSERT INTO `users` (`username`,`email`,`password`) VALUES ('%s','%s','%s')", 
+        $username,$email,$pass); 
+
+// Attempt insert the new user 
+if( mysqli_query($conn,$query) ) { 
+    die('You have successfully registered as '.$_POST['username'].'<br /><a href="/userLogin.php">Click here</a> to log in.'); 
+} else { 
+    // Insert failed, set error message 
+    $errors[] = 'Error adding user to database, MySQL said:<br> 
+        ('.mysqli_errno($conn).') '.mysqli_error($conn).'</span>'; 
+} 
+
+// show errors 
+
+// show form 
+?> 
+<!DOCTYPE html> 
+<html> 
+   <head> 
+      <title>Derokorian User Registration</title> 
+   </head> 
+   <body>
+<?php echo isset($errors) && count($errors) > 0 ? '<span style="color:red">'.implode('<br>',$errors).'</span><br>' : ''; ?> 
+         <form action="" method="post"> 
+         <label for="username">Username:</label><input type="text" name="username" value=""/><br /> 
+         <label for="email">Email:</label><input type="text" name="email" value=""/><br /> 
+         <label for="pass1">Password:</label><input type="password" name="pass1" /><br /> 
+         <label for="pass2">Confirm Pass:</label><input type="password" name="pass2" /><br /> 
+         <input type="submit" value="Register" /> 
+      </form> 
+   </body> 
+</html> 
